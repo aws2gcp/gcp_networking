@@ -16,27 +16,31 @@ variable "mtu" {
   type        = number
   default     = null
 }
+variable "dns_ttl" {
+  description = "The default DNS TTL when creating records"
+  type        = number
+  default     = 60
+}
 variable "enable_global_routing" {
   description = "Enable Global Routing (default is Regional)"
   type        = bool
   default     = false
 }
+variable "service_project_ids" {
+  description = "For Shared VPC, list of service projects to share this network to"
+  type        = list(string)
+  default     = []
+}
 variable "subnet_defaults" {
-  description = "Default settigns for all subnets (can be overridden)"
+  description = "Default settings for all subnets (can be overridden)"
   type = object({
-    enable_private_access    = bool
-    enable_flow_logs         = bool
-    log_aggregation_interval = string
-    log_sample_rate          = number
-    stack_type               = string
+    enable_private_access    = optional(bool)
+    enable_flow_logs         = optional(bool)
+    log_aggregation_interval = optional(string)
+    log_sample_rate          = optional(number)
+    stack_type               = optional(string)
   })
-  default = {
-    enable_private_access    = false
-    enable_flow_logs         = false
-    log_aggregation_interval = "INTERVAL_5_SEC"
-    log_sample_rate          = 0.5
-    stack_type               = "IPV4_ONLY"
-  }
+  default = {}
 }
 variable "subnets" {
   description = "Subnets in this VPC Network"
@@ -85,11 +89,9 @@ variable "peerings" {
 variable "cloud_router_defaults" {
   description = "Default Settings for all Cloud Routers (can be overridden)"
   type = object({
-    bgp_asn = number
+    bgp_asn = optional(number)
   })
-  default = {
-    bgp_asn = 64512
-  }
+  default = {}
 }
 variable "cloud_routers" {
   description = "Cloud Routers attached to this VPC Network"
@@ -115,12 +117,7 @@ variable "cloud_nat_defaults" {
     enable_eim       = optional(bool)
     log_type         = optional(string)
   })
-  default = {
-    min_ports_per_vm = 64
-    timeouts         = [30, 1200, 30, 30]
-    enable_eim       = false
-    log_type         = "errors"
-  }
+  default = {}
 }
 variable "cloud_nats" {
   description = "Cloud NATs used by this VPC Network"
@@ -298,15 +295,26 @@ variable "vpns" {
 variable "instances" {
   type = map(object({
     region                 = string
+    description            = optional(string)
     num_instances          = optional(string)
     subnet_name            = optional(string)
     machine_type           = optional(string)
+    boot_disk_type         = optional(string)
+    boot_disk_size         = optional(number)
+    image                  = optional(string)
     os                     = optional(string)
     os_project             = optional(string)
     startup_script         = optional(string)
     service_account_email  = optional(string)
     service_account_scopes = optional(list(string))
     network_tags           = optional(list(string))
+    enable_ip_forwarding   = optional(bool)
+    nat_ip_addresses       = optional(list(string))
+    nat_ip_names           = optional(list(string))
+    ssh_key                = optional(string)
+    create_instance_groups = optional(bool)
+    public_zone            = optional(string)
+    private_zone           = optional(string)
   }))
   default = {}
 }
@@ -319,41 +327,27 @@ variable "instance_groups" {
   }))
   default = {}
 }
-variable "healthchecks" {
-  description = "Map of Heath Checks"
+variable "dns_zones" {
+  description = "Map of DNS zones"
   type = map(object({
-    port         = optional(number)
-    protocol     = optional(string)
-    request_path = optional(string)
-    response     = optional(string)
+    dns_name         = string
+    description      = optional(string)
+    visibility       = optional(string)
+    visible_networks = optional(list(string))
+    logging          = optional(bool)
+    records = optional(map(object({
+      type    = string
+      ttl     = optional(number)
+      rrdatas = list(string)
+    })))
   }))
   default = {}
 }
-variable "l4_load_balancers" {
-  description = "Map of L4 (TCP/UDP) Load balancers"
+variable "dns_policies" {
+  description = "Map of DNS Policies"
   type = map(object({
-    instances_per_region  = optional(number)
-    machine_type          = optional(string)
-    os_project            = optional(string)
-    os                    = optional(string)
-    startup_script        = optional(string)
-    service_account_email = optional(string)
-    network_tags          = optional(list(string))
-    ports                 = optional(list(string))
-    network_project_id    = optional(string)
-    healthcheck_name      = optional(string)
-    affinity_type         = optional(string)
-    allow_global_access   = optional(string)
-    publish_to_psc        = optional(bool)
-    psc_name              = optional(string)
-    regions = map(object({
-      subnet_name           = optional(string)
-      ip_address            = optional(string)
-      instance_groups       = optional(list(string))
-      instance_groups_zones = optional(list(string))
-      num_instances         = optional(number)
-      allow_global_access   = optional(bool)
-    }))
+    description = optional(string)
+    logging     = optional(bool)
   }))
   default = {}
 }
