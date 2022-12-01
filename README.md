@@ -1,1 +1,1 @@
-moved to https://github.com/jeheyer/network-automation/tree/main/terraform/gcp_vpc_network
+moved to https://github.com/aws2gcp/gcp-networking/tree/main/gcp_vpc_network
